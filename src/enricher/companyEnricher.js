@@ -62,9 +62,8 @@ function buildDomainMap(results) {
     const domain = extractDomain(website);
     if (!domain) continue;
 
-    // Only enrich rows missing company location
-    const hasLocation = (results[i].company_city || '').trim();
-    if (hasLocation) continue;
+    // Skip rows already enriched (flag set by applyToRows)
+    if (results[i]._company_enriched) continue;
 
     if (!map.has(domain)) {
       map.set(domain, []);
@@ -109,6 +108,7 @@ function applyToRows(org, indices, results, log) {
     row.company_revenue = org.organization_revenue_printed || '';
     row.company_sic = (org.sic_codes || []).join('; ');
     row.company_description = org.short_description || '';
+    row._company_enriched = true;  // flag: don't re-process on resume
 
     // Also fill missing fields from people endpoint
     if (!row.organization_employees && org.estimated_num_employees) {

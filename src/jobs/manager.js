@@ -234,11 +234,12 @@ class JobManager extends EventEmitter {
     if (!job) return null;
     if (job.companyEnricher.status === 'running') job.companyEnricher.status = 'stopping';
     setTimeout(() => {
-      // Clear company fields so they get re-enriched
+      // Clear company fields + enriched flag so they get re-enriched
       for (const r of (job.results || [])) {
         r.company_city = ''; r.company_state = ''; r.company_country = '';
         r.company_address = ''; r.company_postal = ''; r.company_revenue = '';
         r.company_sic = ''; r.company_description = '';
+        delete r._company_enriched;
       }
       job.companyEnricher = defaultCompanyEnricher(); job.companyEnricher.status = 'running';
       job.companyEnricher.logs.push('🔄 Company enricher rerun'); this._save(); this.emit('update', job); this._runCompanyEnricher(job);
