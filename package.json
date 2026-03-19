@@ -1,0 +1,19 @@
+{
+  "name": "apollo-scraper",
+  "version": "1.0.0",
+  "description": "Apollo scraper service.",
+  "main": "config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "playwright-core": "^1.58.2"
+  }
+}
