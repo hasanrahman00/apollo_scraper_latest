@@ -131,8 +131,7 @@ class JobManager extends EventEmitter {
     if (!job) return null;
     if (job.status === 'running') job.status = 'stopping';
     setTimeout(() => {
-      job.status = 'running'; job.startedAt = new Date().toISOString();
-      job.finishedAt = null;
+      job.status = 'running'; job.startedAt = new Date().toISOString(); job.finishedAt = null;
       job.logs.push(`\n🔄 Rerun — resuming from page ${job.currentPage} (${job.results.length} leads kept)`);
       this._save(); this.emit('update', job); this._runScrape(job);
     }, job.status === 'stopping' ? 2000 : 0);
@@ -157,7 +156,7 @@ class JobManager extends EventEmitter {
   }
 
   // ═══════════════════════════════════════════════════════════
-  //  WEBSITE ENRICHER (Gemini)
+  //  WEBSITE ENRICHER (Gemini) — runs alongside scraper
   // ═══════════════════════════════════════════════════════════
 
   startEnricher(id) {
@@ -165,9 +164,9 @@ class JobManager extends EventEmitter {
     if (!job) return null;
     if (job.enricher.status === 'running') return this._safe(job);
     const isResume = job.enricher.status === 'stopped' && job.enricher.done > 0;
-    if (!isResume) job.enricher = defaultEnricher();
+    if (!isResume) { job.enricher = defaultEnricher(); }
     job.enricher.status = 'running';
-    job.enricher.logs.push(isResume ? '\n══ ENRICHER RESUMED ══' : '🚀 Website enricher started');
+    job.enricher.logs.push(isResume ? '\n══ WEBSITE ENRICHER RESUMED ══' : '🔍 Website enricher started (watcher mode)');
     this._save(); this.emit('update', job); this._runEnricher(job);
     return this._safe(job);
   }
@@ -191,8 +190,11 @@ class JobManager extends EventEmitter {
       if (job.enricher._geminiPage) { closeGeminiTab(job.enricher._geminiPage, () => {}).catch(() => {}); job.enricher._geminiPage = null; }
     }
     setTimeout(() => {
+      // Clear website enrichment flags
+      for (const r of (job.results || [])) { delete r._website_enriched; }
       job.enricher = defaultEnricher(); job.enricher.status = 'running';
-      job.enricher.logs.push('🔄 Website enricher rerun'); this._save(); this.emit('update', job); this._runEnricher(job);
+      job.enricher.logs.push('🔄 Website enricher rerun (watcher mode)');
+      this._save(); this.emit('update', job); this._runEnricher(job);
     }, 2000);
     return this._safe(job);
   }
@@ -204,7 +206,7 @@ class JobManager extends EventEmitter {
   }
 
   // ═══════════════════════════════════════════════════════════
-  //  COMPANY ENRICHER (Apollo bulk_enrich)
+  //  COMPANY ENRICHER (Apollo) — runs alongside scraper + website enricher
   // ═══════════════════════════════════════════════════════════
 
   startCompanyEnricher(id) {
@@ -212,9 +214,9 @@ class JobManager extends EventEmitter {
     if (!job) return null;
     if (job.companyEnricher.status === 'running') return this._safe(job);
     const isResume = job.companyEnricher.status === 'stopped' && job.companyEnricher.done > 0;
-    if (!isResume) job.companyEnricher = defaultCompanyEnricher();
+    if (!isResume) { job.companyEnricher = defaultCompanyEnricher(); }
     job.companyEnricher.status = 'running';
-    job.companyEnricher.logs.push(isResume ? '\n══ COMPANY ENRICHER RESUMED ══' : '🏢 Company enricher started');
+    job.companyEnricher.logs.push(isResume ? '\n══ COMPANY ENRICHER RESUMED ══' : '🏢 Company enricher started (watcher mode)');
     this._save(); this.emit('update', job); this._runCompanyEnricher(job);
     return this._safe(job);
   }
@@ -234,15 +236,14 @@ class JobManager extends EventEmitter {
     if (!job) return null;
     if (job.companyEnricher.status === 'running') job.companyEnricher.status = 'stopping';
     setTimeout(() => {
-      // Clear company fields + enriched flag so they get re-enriched
       for (const r of (job.results || [])) {
         r.company_city = ''; r.company_state = ''; r.company_country = '';
         r.company_address = ''; r.company_postal = ''; r.company_revenue = '';
-        r.company_sic = ''; r.company_description = '';
-        delete r._company_enriched;
+        r.company_sic = ''; r.company_description = ''; delete r._company_enriched;
       }
       job.companyEnricher = defaultCompanyEnricher(); job.companyEnricher.status = 'running';
-      job.companyEnricher.logs.push('🔄 Company enricher rerun'); this._save(); this.emit('update', job); this._runCompanyEnricher(job);
+      job.companyEnricher.logs.push('🔄 Company enricher rerun (watcher mode)');
+      this._save(); this.emit('update', job); this._runCompanyEnricher(job);
     }, 2000);
     return this._safe(job);
   }
