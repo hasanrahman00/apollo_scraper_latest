@@ -6,22 +6,16 @@ const { buildCsv } = require('../utils/csv');
 const { addClient, send, broadcast } = require('../utils/sse');
 const config = require('../../config');
 
-// ─── Forward events → SSE ────────────────────────────────────
-
 jobs.on('update',       (job) => broadcast('job:update', jobs._safe(job)));
 jobs.on('delete',       (id)  => broadcast('job:delete', { id }));
 jobs.on('log',          (d)   => broadcast('job:log', d));
 jobs.on('enricher:log', (d)   => broadcast('enricher:log', d));
+jobs.on('company:log',  (d)   => broadcast('company:log', d));
 
 function register(app) {
 
-  // ── SSE ────────────────────────────────────────────────────
-  app.get('/api/events', (req, res) => {
-    const client = addClient(res);
-    send(client, 'init', jobs.list());
-  });
+  app.get('/api/events', (req, res) => { const c = addClient(res); send(c, 'init', jobs.list()); });
 
-  // ── Parse URL ──────────────────────────────────────────────
   app.post('/api/parse-url', (req, res) => {
     try { res.json({ ok: true, payload: parseApolloUrl(req.body.url) }); }
     catch (e) { res.json({ ok: false, error: e.message }); }
@@ -38,27 +32,14 @@ function register(app) {
     res.json(jobs.create({ name, url, payload, maxPages: parseInt(maxPages, 10) || 100, perPage: parseInt(perPage, 10) || 25 }));
   });
 
-  app.delete('/api/jobs/:id', (req, res) => {
-    res.json({ success: jobs.delete(req.params.id) });
-  });
+  app.delete('/api/jobs/:id', (req, res) => { res.json({ success: jobs.delete(req.params.id) }); });
 
   // ── Scraper controls ───────────────────────────────────────
-  app.post('/api/jobs/:id/start', (req, res) => {
-    const j = jobs.start(req.params.id);
-    j ? res.json(j) : res.status(404).json({ error: 'Not found' });
-  });
+  app.post('/api/jobs/:id/start', (req, res) => { const j = jobs.start(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
+  app.post('/api/jobs/:id/stop',  (req, res) => { const j = jobs.stop(req.params.id);  j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
+  app.post('/api/jobs/:id/rerun', (req, res) => { const j = jobs.rerun(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
 
-  app.post('/api/jobs/:id/stop', (req, res) => {
-    const j = jobs.stop(req.params.id);
-    j ? res.json(j) : res.status(404).json({ error: 'Not found' });
-  });
-
-  app.post('/api/jobs/:id/rerun', (req, res) => {
-    const j = jobs.rerun(req.params.id);
-    j ? res.json(j) : res.status(404).json({ error: 'Not found' });
-  });
-
-  // ── CSV download (works while running) ─────────────────────
+  // ── CSV download ───────────────────────────────────────────
   app.get('/api/jobs/:id/csv', (req, res) => {
     const job = jobs.get(req.params.id);
     if (!job) return res.status(404).json({ error: 'Not found' });
@@ -71,40 +52,25 @@ function register(app) {
   });
 
   // ── Scraper logs ───────────────────────────────────────────
-  app.get('/api/jobs/:id/logs', (req, res) => {
-    res.json({ logs: jobs.getLogs(req.params.id) });
-  });
+  app.get('/api/jobs/:id/logs', (req, res) => { res.json({ logs: jobs.getLogs(req.params.id) }); });
 
-  // ═══ Enricher controls ═════════════════════════════════════
+  // ═══ Website Enricher (Gemini) ═════════════════════════════
+  app.post('/api/jobs/:id/enricher/start', (req, res) => { const j = jobs.startEnricher(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
+  app.post('/api/jobs/:id/enricher/stop',  (req, res) => { const j = jobs.stopEnricher(req.params.id);  j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
+  app.post('/api/jobs/:id/enricher/rerun', (req, res) => { const j = jobs.rerunEnricher(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
+  app.get('/api/jobs/:id/enricher/logs',   (req, res) => { res.json({ logs: jobs.getEnricherLogs(req.params.id) }); });
 
-  app.post('/api/jobs/:id/enricher/start', (req, res) => {
-    const j = jobs.startEnricher(req.params.id);
-    j ? res.json(j) : res.status(404).json({ error: 'Not found' });
-  });
-
-  app.post('/api/jobs/:id/enricher/stop', (req, res) => {
-    const j = jobs.stopEnricher(req.params.id);
-    j ? res.json(j) : res.status(404).json({ error: 'Not found' });
-  });
-
-  app.post('/api/jobs/:id/enricher/rerun', (req, res) => {
-    const j = jobs.rerunEnricher(req.params.id);
-    j ? res.json(j) : res.status(404).json({ error: 'Not found' });
-  });
-
-  app.get('/api/jobs/:id/enricher/logs', (req, res) => {
-    res.json({ logs: jobs.getEnricherLogs(req.params.id) });
-  });
+  // ═══ Company Enricher (Apollo bulk_enrich) ═════════════════
+  app.post('/api/jobs/:id/company/start', (req, res) => { const j = jobs.startCompanyEnricher(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
+  app.post('/api/jobs/:id/company/stop',  (req, res) => { const j = jobs.stopCompanyEnricher(req.params.id);  j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
+  app.post('/api/jobs/:id/company/rerun', (req, res) => { const j = jobs.rerunCompanyEnricher(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
+  app.get('/api/jobs/:id/company/logs',   (req, res) => { res.json({ logs: jobs.getCompanyEnricherLogs(req.params.id) }); });
 
   // ── Settings ───────────────────────────────────────────────
   app.get('/api/settings', (req, res) => {
     let saved = {};
     try { if (fs.existsSync(config.SETTINGS_FILE)) saved = JSON.parse(fs.readFileSync(config.SETTINGS_FILE, 'utf-8')); } catch {}
-    res.json({
-      CHROME_PATH: saved.CHROME_PATH || config.DEFAULTS.CHROME_PATH,
-      USER_DATA_DIR: saved.USER_DATA_DIR || config.DEFAULTS.USER_DATA_DIR,
-      PORT: saved.PORT || config.DEFAULTS.PORT,
-    });
+    res.json({ CHROME_PATH: saved.CHROME_PATH || config.DEFAULTS.CHROME_PATH, USER_DATA_DIR: saved.USER_DATA_DIR || config.DEFAULTS.USER_DATA_DIR, PORT: saved.PORT || config.DEFAULTS.PORT });
   });
 
   app.post('/api/settings', (req, res) => {

@@ -154,6 +154,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 
 .e-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
+.e-label { font-size: 11px; font-weight: 600; color: var(--text-3); margin-bottom: 8px; letter-spacing: .3px; text-transform: uppercase; }
+
+.e-section + .e-section { border-top: 1px solid var(--border); }
+
 .b-brand-sm { background: var(--brand-dim); color: var(--brand); border: 1px solid rgba(139,92,246,0.2); }
 .b-brand-sm:hover { background: rgba(139,92,246,0.18); }
 

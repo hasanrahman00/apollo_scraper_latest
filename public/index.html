@@ -95,20 +95,31 @@
   <div class="modal">
     <div class="modal-head">
       <h3 id="log-title">Logs</h3>
-      <button class="b b-xs b-ghost" onclick="closeLogs()">✕ Close</button>
+      <button class="b b-xs b-ghost" onclick="closeModal('modal')">✕ Close</button>
     </div>
     <div class="modal-body" id="log-body"></div>
   </div>
 </div>
 
-<!-- Enricher Logs Modal -->
+<!-- Website Enricher Logs Modal -->
 <div class="modal-bg" id="emodal">
   <div class="modal">
     <div class="modal-head">
-      <h3 id="elog-title">Enricher Logs</h3>
-      <button class="b b-xs b-ghost" onclick="closeELogs()">✕ Close</button>
+      <h3 id="elog-title">Website Enricher Logs</h3>
+      <button class="b b-xs b-ghost" onclick="closeModal('emodal')">✕ Close</button>
     </div>
     <div class="modal-body" id="elog-body"></div>
+  </div>
+</div>
+
+<!-- Company Enricher Logs Modal -->
+<div class="modal-bg" id="cmodal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="clog-title">Company Enricher Logs</h3>
+      <button class="b b-xs b-ghost" onclick="closeModal('cmodal')">✕ Close</button>
+    </div>
+    <div class="modal-body" id="clog-body"></div>
   </div>
 </div>
 

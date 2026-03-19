@@ -20,6 +20,15 @@ const COLUMNS = [
   { key: 'organization_employees', header: 'Employees' },
   { key: 'organization_industries', header: 'Industries' },
   { key: 'organization_keywords',  header: 'Keywords' },
+  // Company details from bulk_enrich
+  { key: 'company_city',           header: 'Company City' },
+  { key: 'company_state',          header: 'Company State' },
+  { key: 'company_country',        header: 'Company Country' },
+  { key: 'company_address',        header: 'Company Address' },
+  { key: 'company_postal',         header: 'Company Postal' },
+  { key: 'company_revenue',        header: 'Revenue' },
+  { key: 'company_sic',            header: 'SIC Codes' },
+  { key: 'company_description',    header: 'Description' },
 ];
 
 // ─── Capitalize first letter of each word ────────────────────
@@ -53,22 +62,26 @@ function flattenPerson(p) {
     organization_employees: org.estimated_num_employees || '',
     organization_industries: (org.industries || []).join('; '),
     organization_keywords:  (org.keywords || []).join('; '),
+    // Company enricher fills these later
+    company_city:           '',
+    company_state:          '',
+    company_country:        '',
+    company_address:        '',
+    company_postal:         '',
+    company_revenue:        '',
+    company_sic:            '',
+    company_description:    '',
   };
 }
 
 // ─── CSV helpers ─────────────────────────────────────────────
 
-// Always quote every cell — prevents broken columns from commas
-// inside keywords, industries, headlines, titles etc.
 function escapeCell(val) {
   const s = String(val == null ? '' : val);
-  // Escape internal double quotes
   const escaped = s.replace(/"/g, '""');
-  // Always wrap in quotes
   return '"' + escaped + '"';
 }
 
-// UTF-8 BOM so Excel opens with correct encoding
 const BOM = '\ufeff';
 
 function buildCsv(rows) {
@@ -77,7 +90,6 @@ function buildCsv(rows) {
   const dataRows = rows.map(row =>
     COLUMNS.map(c => escapeCell(row[c.key])).join(',')
   );
-  // BOM + \r\n line endings for Windows Excel
   return BOM + [headerRow, ...dataRows].join('\r\n');
 }
 
