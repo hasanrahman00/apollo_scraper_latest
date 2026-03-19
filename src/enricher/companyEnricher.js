@@ -79,6 +79,7 @@ function buildDomainMap(results) {
 // ─── Apply enrichment data back to rows ──────────────────────
 
 function applyEnrichment(org, domainMap, results, log) {
+  if (!org || typeof org !== 'object') return 0;
   const domain = (org.primary_domain || '').toLowerCase();
   if (!domain) return 0;
 
@@ -98,6 +99,7 @@ function applyToRows(org, indices, results, log) {
   let count = 0;
   for (const idx of indices) {
     const row = results[idx];
+    if (!row) continue;
 
     row.company_city = org.city || '';
     row.company_state = org.state || '';
@@ -213,7 +215,12 @@ async function runCompanyEnricher(job, log, onProgress) {
 
       let batchEnriched = 0;
       for (const org of orgs) {
-        batchEnriched += applyEnrichment(org, map, job.results, log);
+        if (!org || typeof org !== 'object') continue;
+        try {
+          batchEnriched += applyEnrichment(org, map, job.results, log);
+        } catch (err) {
+          log(`⚠️  Skipped org (${org?.name || 'unknown'}): ${err.message}`);
+        }
       }
 
       job.companyEnricher.done += batch.length;
