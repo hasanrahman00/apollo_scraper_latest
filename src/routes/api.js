@@ -65,9 +65,9 @@ function register(app) {
     if (!job.results?.length) return res.status(400).json({ error: 'No data' });
     const csv = buildCsv(job.results);
     const fn = (job.name || 'apollo').replace(/[^a-zA-Z0-9_-]/g, '_') + `_${job.results.length}leads.csv`;
-    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${fn}"`);
-    res.send(csv);
+    res.send(Buffer.from(csv, 'utf-8'));
   });
 
   // ── Scraper logs ───────────────────────────────────────────

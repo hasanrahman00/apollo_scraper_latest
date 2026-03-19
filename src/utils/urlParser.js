@@ -6,20 +6,29 @@ function camelToSnake(str) {
   return str.replace(/([A-Z])/g, '_$1').toLowerCase();
 }
 
-// ─── Fields array (what Apollo returns per person) ───────────
+// ─── Fields array (exact copy from Apollo's frontend) ────────
 
 const FIELDS = [
   'id', 'name', 'contact_job_change_event', 'call_opted_out',
-  'first_name', 'last_name', 'title', 'organization_id',
-  'intent_strength', 'organization_name', 'email', 'email_status',
+  'first_name', 'last_name', 'title',
+  'account', 'organization_id', 'intent_strength', 'organization_name',
+  'account.id', 'account.organization_id', 'account.domain',
+  'account.logo_url', 'account.name',
+  'account.facebook_url', 'account.linkedin_url', 'account.twitter_url',
+  'account.crm_record_url', 'account.website_url',
+  'contact_emails', 'email', 'email_status',
+  'free_domain', 'email_needs_tickling', 'email_status_unavailable_reason',
   'email_true_status', 'email_domain_catchall',
-  'failed_email_verify_request', 'phone_numbers', 'label_ids',
-  'linkedin_url', 'emailer_campaign_ids', 'twitter_url',
-  'facebook_url', 'city', 'state', 'country', 'contact_roles',
-  'headline', 'extrapolated_email_confidence', 'sequences',
-  'time_zone', 'seniority', 'engagement_graph',
-  'standalone_form_enrichment_config_interactions',
-  'departments',
+  'failed_email_verify_request', 'flagged_datum',
+  'phone_numbers', 'sanitized_phone',
+  'direct_dial_status', 'direct_dial_enrichment_failed_at',
+  'label_ids', 'linkedin_url', 'emailer_campaign_ids',
+  'twitter_url', 'facebook_url', 'crm_record_url',
+  'city', 'state', 'country',
+  'account.estimated_num_employees',
+  'account.industries',
+  'account.keywords',
+  'source_display_name',
 ];
 
 // ─── Default payload (always sent) ───────────────────────────

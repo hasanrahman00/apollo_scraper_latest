@@ -129,6 +129,21 @@ async function runScrape(job, log, onProgress) {
       if (pageNum === startPage) {
         job.totalFound = totalEntries;
         log(`🎯 Total matching: ${totalEntries.toLocaleString()}`);
+
+        // Debug: dump RAW first person from Apollo
+        if (people.length > 0) {
+          const p0 = people[0];
+          log(`🔍 RAW person[0] ALL KEYS: ${Object.keys(p0).join(', ')}`);
+          log(`🔍 RAW person[0].organization exists: ${'organization' in p0}`);
+          log(`🔍 RAW person[0].organization value: ${JSON.stringify(p0.organization)?.substring(0, 400)}`);
+          log(`🔍 RAW person[0] full dump: ${JSON.stringify(p0).substring(0, 800)}`);
+
+          // Also test flattenPerson right here
+          const testFlat = flattenPerson(p0);
+          log(`🔍 FLAT employees: "${testFlat.organization_employees}"`);
+          log(`🔍 FLAT industries: "${testFlat.organization_industries}"`);
+          log(`🔍 FLAT keywords: "${testFlat.organization_keywords}"`);
+        }
       }
 
       if (people.length === 0) {

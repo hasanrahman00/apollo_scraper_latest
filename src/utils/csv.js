@@ -58,13 +58,18 @@ function flattenPerson(p) {
 
 // ─── CSV helpers ─────────────────────────────────────────────
 
+// Always quote every cell — prevents broken columns from commas
+// inside keywords, industries, headlines, titles etc.
 function escapeCell(val) {
   const s = String(val == null ? '' : val);
-  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-    return '"' + s.replace(/"/g, '""') + '"';
-  }
-  return s;
+  // Escape internal double quotes
+  const escaped = s.replace(/"/g, '""');
+  // Always wrap in quotes
+  return '"' + escaped + '"';
 }
+
+// UTF-8 BOM so Excel opens with correct encoding
+const BOM = '\ufeff';
 
 function buildCsv(rows) {
   if (!rows.length) return '';
@@ -72,7 +77,8 @@ function buildCsv(rows) {
   const dataRows = rows.map(row =>
     COLUMNS.map(c => escapeCell(row[c.key])).join(',')
   );
-  return [headerRow, ...dataRows].join('\n');
+  // BOM + \r\n line endings for Windows Excel
+  return BOM + [headerRow, ...dataRows].join('\r\n');
 }
 
 module.exports = { flattenPerson, buildCsv, COLUMNS };
