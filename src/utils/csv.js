@@ -17,6 +17,9 @@ const COLUMNS = [
   { key: 'organization_founded',   header: 'Founded Year' },
   { key: 'organization_facebook',  header: 'Facebook' },
   { key: 'organization_twitter',   header: 'Twitter' },
+  { key: 'organization_employees', header: 'Employees' },
+  { key: 'organization_industries', header: 'Industries' },
+  { key: 'organization_keywords',  header: 'Keywords' },
 ];
 
 // ─── Capitalize first letter of each word ────────────────────
@@ -47,6 +50,9 @@ function flattenPerson(p) {
     organization_founded:   org.founded_year || '',
     organization_facebook:  org.facebook_url || '',
     organization_twitter:   org.twitter_url || '',
+    organization_employees: org.estimated_num_employees || '',
+    organization_industries: (org.industries || []).join('; '),
+    organization_keywords:  (org.keywords || []).join('; '),
   };
 }
 
