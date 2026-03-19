@@ -4,7 +4,7 @@ const path = require('path');
 const { register } = require('./src/routes/api');
 
 const app = express();
-const PORT = parseInt(process.argv[2] || process.env.PORT || '3000', 10);
+const PORT = parseInt(process.argv[2] || process.env.SERVER_PORT || '3000', 10);
 
 app.use(express.json({ limit: '50mb' }));
 

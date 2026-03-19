@@ -2,10 +2,10 @@ const { connectBrowser, getApolloPage } = require('./browserManager');
 const { searchPeople } = require('./apolloClient');
 const { flattenPerson } = require('../utils/csv');
 
-const RETRY_DELAY = 3000;
-const RATE_LIMIT_DELAY = 30000;
-const PAGE_DELAY_MIN = 1500;
-const PAGE_DELAY_RANGE = 1500;
+const RETRY_DELAY = parseInt(process.env.SCRAPER_RETRY_DELAY, 10) || 3000;
+const RATE_LIMIT_DELAY = (parseInt(process.env.SCRAPER_RATE_LIMIT_WAIT, 10) || 30) * 1000;
+const PAGE_DELAY_MIN = parseInt(process.env.SCRAPER_PAGE_DELAY_MIN, 10) || 1500;
+const PAGE_DELAY_RANGE = (parseInt(process.env.SCRAPER_PAGE_DELAY_MAX, 10) || 3000) - PAGE_DELAY_MIN;
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
