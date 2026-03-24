@@ -26,6 +26,7 @@ const COLUMNS = [
   { key: 'company_sic',            header: 'SIC Codes' },
   { key: 'organization_phone',     header: 'Phone' },
   { key: 'organization_founded',   header: 'Founded Year' },
+  { key: 'person_id',              header: 'Person ID' },
 ];
 
 // ─── Capitalize first letter of each word ────────────────────
@@ -65,6 +66,7 @@ function flattenPerson(p) {
     company_sic:            '',
     organization_phone:     org.phone || '',
     organization_founded:   org.founded_year || '',
+    person_id:              p.id || '',
   };
 }
 
