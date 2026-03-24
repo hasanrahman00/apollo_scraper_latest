@@ -1,6 +1,6 @@
-// ─── Column schema: internal key → CSV header (user-defined order) ───
-
 const COLUMNS = [
+  { key: 'url_number',             header: 'Url Number' },
+  { key: 'page_number',            header: 'Page Number' },
   { key: 'organization_name',      header: 'Company Name' },
   { key: 'organization_website',   header: 'Website' },
   { key: 'first_name',             header: 'First Name' },
@@ -29,18 +29,16 @@ const COLUMNS = [
   { key: 'person_id',              header: 'Person ID' },
 ];
 
-// ─── Capitalize first letter of each word ────────────────────
-
 function titleCase(str) {
   if (!str) return '';
   return str.replace(/\b\w/g, c => c.toUpperCase());
 }
 
-// ─── Flatten Apollo person record ────────────────────────────
-
-function flattenPerson(p) {
+function flattenPerson(p, urlNumber, pageNumber) {
   const org = p.organization || {};
   return {
+    url_number:             urlNumber || '',
+    page_number:            pageNumber || '',
     organization_name:      org.name || p.organization_name || '',
     organization_website:   org.website_url || '',
     first_name:             p.first_name || '',
@@ -69,8 +67,6 @@ function flattenPerson(p) {
     person_id:              p.id || '',
   };
 }
-
-// ─── CSV helpers ─────────────────────────────────────────────
 
 function escapeCell(val) {
   const s = String(val == null ? '' : val);

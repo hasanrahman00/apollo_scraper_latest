@@ -21,9 +21,9 @@ function register(app) {
     catch (e) { res.json({ ok: false, error: e.message }); }
   });
 
-  // ── Jobs CRUD ──────────────────────────────────────────────
   app.get('/api/jobs', (req, res) => res.json(jobs.list()));
 
+  // Single URL job
   app.post('/api/jobs', (req, res) => {
     const { name, url, maxPages, perPage } = req.body;
     if (!url) return res.status(400).json({ error: 'URL required' });
@@ -32,14 +32,37 @@ function register(app) {
     res.json(jobs.create({ name, url, payload, maxPages: parseInt(maxPages, 10) || 100, perPage: parseInt(perPage, 10) || 25 }));
   });
 
+  // Batch multi-URL job
+  app.post('/api/jobs/batch', (req, res) => {
+    const { name, urls, maxPages, perPage } = req.body;
+    if (!Array.isArray(urls) || urls.length === 0) return res.status(400).json({ error: 'urls array required' });
+
+    const cleaned = [];
+    for (const entry of urls) {
+      const u = (entry.url || '').trim();
+      if (!u) continue;
+      cleaned.push({
+        urlNumber: entry.urlNumber || entry.url_number || cleaned.length + 1,
+        url: u,
+        payload: null, // parsed in scrapeEngine before each URL
+      });
+    }
+    if (cleaned.length === 0) return res.status(400).json({ error: 'No valid URLs' });
+
+    res.json(jobs.create({
+      name: name || `Batch (${cleaned.length} URLs)`,
+      urls: cleaned,
+      maxPages: parseInt(maxPages, 10) || 100,
+      perPage: parseInt(perPage, 10) || 25,
+    }));
+  });
+
   app.delete('/api/jobs/:id', (req, res) => { res.json({ success: jobs.delete(req.params.id) }); });
 
-  // ── Scraper controls ───────────────────────────────────────
   app.post('/api/jobs/:id/start', (req, res) => { const j = jobs.start(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
   app.post('/api/jobs/:id/stop',  (req, res) => { const j = jobs.stop(req.params.id);  j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
   app.post('/api/jobs/:id/rerun', (req, res) => { const j = jobs.rerun(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
 
-  // ── CSV download ───────────────────────────────────────────
   app.get('/api/jobs/:id/csv', (req, res) => {
     const job = jobs.get(req.params.id);
     if (!job) return res.status(404).json({ error: 'Not found' });
@@ -51,22 +74,18 @@ function register(app) {
     res.send(Buffer.from(csv, 'utf-8'));
   });
 
-  // ── Scraper logs ───────────────────────────────────────────
   app.get('/api/jobs/:id/logs', (req, res) => { res.json({ logs: jobs.getLogs(req.params.id) }); });
 
-  // ═══ Website Enricher (Gemini) ═════════════════════════════
   app.post('/api/jobs/:id/enricher/start', (req, res) => { const j = jobs.startEnricher(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
   app.post('/api/jobs/:id/enricher/stop',  (req, res) => { const j = jobs.stopEnricher(req.params.id);  j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
   app.post('/api/jobs/:id/enricher/rerun', (req, res) => { const j = jobs.rerunEnricher(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
   app.get('/api/jobs/:id/enricher/logs',   (req, res) => { res.json({ logs: jobs.getEnricherLogs(req.params.id) }); });
 
-  // ═══ Company Enricher (Apollo bulk_enrich) ═════════════════
   app.post('/api/jobs/:id/company/start', (req, res) => { const j = jobs.startCompanyEnricher(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
   app.post('/api/jobs/:id/company/stop',  (req, res) => { const j = jobs.stopCompanyEnricher(req.params.id);  j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
   app.post('/api/jobs/:id/company/rerun', (req, res) => { const j = jobs.rerunCompanyEnricher(req.params.id); j ? res.json(j) : res.status(404).json({ error: 'Not found' }); });
   app.get('/api/jobs/:id/company/logs',   (req, res) => { res.json({ logs: jobs.getCompanyEnricherLogs(req.params.id) }); });
 
-  // ── Settings ───────────────────────────────────────────────
   app.get('/api/settings', (req, res) => {
     let saved = {};
     try { if (fs.existsSync(config.SETTINGS_FILE)) saved = JSON.parse(fs.readFileSync(config.SETTINGS_FILE, 'utf-8')); } catch {}

@@ -47,7 +47,7 @@ function buildDefaults() {
     open_factor_names: [],
     typed_custom_fields: [],
     sort_ascending: false,
-    sort_by_field: 'recommendations_score',
+    sort_by_field: 'person_last_name.raw',
     fields: [...FIELDS],
     cacheKey: Date.now(),
     search_session_id: crypto.randomUUID(),
@@ -124,6 +124,12 @@ function parseApolloUrl(url) {
   const payload = { ...defaults, ...filters };
 
   if (typeof payload.page === 'string') payload.page = parseInt(payload.page, 10) || 1;
+
+  // Force stable sort — person_name.raw doesn't change between requests
+  // recommendations_score recalculates live, causing ~20% page-shift dupes
+  payload.sort_by_field = 'person_name.raw';
+  payload.sort_ascending = true;
+
   return payload;
 }
 

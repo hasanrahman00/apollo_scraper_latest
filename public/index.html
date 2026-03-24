@@ -9,77 +9,67 @@
 <body>
 <div class="shell">
 
-  <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-left">
       <div class="logo">⚡</div>
       <h1><em>VikiLeads</em> Apollo Scraper</h1>
     </div>
-    <span class="ver">v2.0</span>
+    <span class="ver">v3.0</span>
   </div>
 
-  <!-- Nav -->
   <div class="nav">
-    <button class="nav-btn on" data-p="new">New Scrape</button>
+    <button class="nav-btn on" data-p="new">Single URL</button>
+    <button class="nav-btn" data-p="batch">Batch Scrape</button>
     <button class="nav-btn" data-p="jobs">Jobs <span id="jbadge" class="nav-badge">0</span></button>
     <button class="nav-btn" data-p="settings">Settings</button>
   </div>
 
-  <!-- ═══ New Scrape ═══ -->
+  <!-- ═══ Single URL ═══ -->
   <div class="pane on" id="pane-new">
-    <div class="tip">
-      <strong>How it works:</strong> Connects to Chrome via CDP and runs Apollo API calls from inside the browser.
-      No cookies to copy — just be logged into Apollo in Chrome.<br>
-      Chrome must be running with <code>--remote-debugging-port=9222</code> or the scraper auto-launches it from Settings.
-    </div>
-
-    <div class="field">
-      <label>Job Name</label>
-      <input type="text" id="f-name" placeholder="e.g. US SaaS CEOs — Verified Only">
-    </div>
-
-    <div class="field">
-      <label>Apollo Search URL</label>
-      <textarea id="f-url" rows="2" placeholder="https://app.apollo.io/#/people?prospectedByCurrentTeam[]=no&contactEmailStatusV2[]=verified&..."></textarea>
-      <div class="hint">Apply all your filters in Apollo's UI first, then copy the URL</div>
-    </div>
-
+    <div class="tip"><strong>Single URL:</strong> Paste one Apollo search URL and scrape all results.</div>
+    <div class="field"><label>Job Name</label><input type="text" id="f-name" placeholder="e.g. US SaaS CEOs"></div>
+    <div class="field"><label>Apollo Search URL</label><textarea id="f-url" rows="2" placeholder="https://app.apollo.io/#/people?..."></textarea></div>
     <div class="row3" style="margin-bottom:14px;">
       <div class="field"><label>Per Page</label><input type="number" id="f-per" value="25" min="1" max="100"></div>
       <div class="field"><label>Max Pages</label><input type="number" id="f-max" value="100" min="1"></div>
-      <div class="field" style="display:flex;align-items:end;">
-        <button class="b b-ghost" onclick="parseUrl()" style="width:100%">Preview Payload</button>
-      </div>
+      <div class="field" style="display:flex;align-items:end;"><button class="b b-ghost" onclick="parseUrl()" style="width:100%">Preview</button></div>
     </div>
-
     <div id="preview" class="preview"></div>
-
-    <button class="collapse-btn" onclick="toggleC(this)">
-      <span>Advanced — User-Agent override</span>
-      <span>›</span>
-    </button>
-    <div class="collapse-box">
-      <div class="field">
-        <label>User-Agent</label>
-        <input type="text" id="f-ua" value="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36">
-      </div>
-    </div>
-
     <button class="b b-brand" onclick="createJob()">⚡ Create & Start Scraping</button>
   </div>
 
-  <!-- ═══ Jobs ═══ -->
-  <div class="pane" id="pane-jobs">
-    <div class="jobs" id="jlist"></div>
+  <!-- ═══ Batch Scrape ═══ -->
+  <div class="pane" id="pane-batch">
+    <div class="tip">
+      <strong>Batch Scrape:</strong> Upload a CSV with <code>url_number</code> and <code>url</code> columns.
+      Each URL is processed one by one — all results go into one CSV with Url Number and Page Number columns.
+    </div>
+    <div class="field"><label>Job Name</label><input type="text" id="b-name" placeholder="e.g. Q1 Target Lists"></div>
+    <div class="field">
+      <label>Upload CSV</label>
+      <input type="file" id="b-file" accept=".csv,.txt" onchange="parseBatchCsv()">
+      <div class="hint">CSV: url_number,url (header row required)</div>
+    </div>
+    <div id="b-preview" class="batch-preview" style="display:none;">
+      <div class="b-preview-head"><span id="b-count">0 URLs</span><button class="b b-xs b-ghost" onclick="clearBatch()">Clear</button></div>
+      <table class="b-table"><thead><tr><th>#</th><th>URL</th></tr></thead><tbody id="b-tbody"></tbody></table>
+    </div>
+    <div class="row3" style="margin-bottom:14px;">
+      <div class="field"><label>Per Page</label><input type="number" id="b-per" value="25" min="1" max="100"></div>
+      <div class="field"><label>Max Pages per URL</label><input type="number" id="b-max" value="100" min="1"></div>
+      <div class="field"></div>
+    </div>
+    <button class="b b-brand" id="b-start" onclick="createBatchJob()" disabled>⚡ Start Batch Scraping</button>
   </div>
+
+  <!-- ═══ Jobs ═══ -->
+  <div class="pane" id="pane-jobs"><div class="jobs" id="jlist"></div></div>
 
   <!-- ═══ Settings ═══ -->
   <div class="pane" id="pane-settings">
     <div class="set-card">
       <h3 style="font-size:15px;margin-bottom:14px;">Chrome Configuration</h3>
-      <div class="tip">
-        If Chrome isn't already running with debugging, the scraper will auto-launch it using these settings.
-      </div>
+      <div class="tip">If Chrome isn't running with debugging, the scraper will auto-launch it.</div>
       <div class="field"><label>Chrome Path</label><input type="text" id="s-chrome"></div>
       <div class="field"><label>User Data Directory</label><input type="text" id="s-data"></div>
       <div class="field"><label>Debug Port</label><input type="number" id="s-port"></div>
@@ -87,41 +77,12 @@
       <span id="s-msg" style="margin-left:10px;font-size:12px;color:var(--green)"></span>
     </div>
   </div>
-
 </div>
 
-<!-- Scraper Logs Modal -->
-<div class="modal-bg" id="modal">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="log-title">Logs</h3>
-      <button class="b b-xs b-ghost" onclick="closeModal('modal')">✕ Close</button>
-    </div>
-    <div class="modal-body" id="log-body"></div>
-  </div>
-</div>
-
-<!-- Website Enricher Logs Modal -->
-<div class="modal-bg" id="emodal">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="elog-title">Website Enricher Logs</h3>
-      <button class="b b-xs b-ghost" onclick="closeModal('emodal')">✕ Close</button>
-    </div>
-    <div class="modal-body" id="elog-body"></div>
-  </div>
-</div>
-
-<!-- Company Enricher Logs Modal -->
-<div class="modal-bg" id="cmodal">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="clog-title">Company Enricher Logs</h3>
-      <button class="b b-xs b-ghost" onclick="closeModal('cmodal')">✕ Close</button>
-    </div>
-    <div class="modal-body" id="clog-body"></div>
-  </div>
-</div>
+<!-- Modals -->
+<div class="modal-bg" id="modal"><div class="modal"><div class="modal-head"><h3 id="log-title">Logs</h3><button class="b b-xs b-ghost" onclick="closeModal('modal')">✕</button></div><div class="modal-body" id="log-body"></div></div></div>
+<div class="modal-bg" id="emodal"><div class="modal"><div class="modal-head"><h3 id="elog-title">Website Enricher</h3><button class="b b-xs b-ghost" onclick="closeModal('emodal')">✕</button></div><div class="modal-body" id="elog-body"></div></div></div>
+<div class="modal-bg" id="cmodal"><div class="modal"><div class="modal-head"><h3 id="clog-title">Company Enricher</h3><button class="b b-xs b-ghost" onclick="closeModal('cmodal')">✕</button></div><div class="modal-body" id="clog-body"></div></div></div>
 
 <script src="/js/app.js"></script>
 </body>
